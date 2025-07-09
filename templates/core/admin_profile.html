@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Admin Profile - Player Management System{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h3 mb-0">
+                        <i class="bi bi-person-circle me-2 text-primary"></i>
+                        Admin Profile
+                    </h1>
+                    <p class="text-muted mb-0">Your account information</p>
+                </div>
+                <div>
+                    <a href="{% url 'admin:core_user_change' user.pk %}" class="btn btn-warning">
+                        <i class="bi bi-pencil me-2"></i>Edit Profile
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Profile Information -->
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="bi bi-person me-2"></i>Personal Information
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label text-muted">Full Name</label>
+                            <p class="fw-bold">{{ user.get_full_name }}</p>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label text-muted">Username</label>
+                            <p class="fw-bold">{{ user.username }}</p>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label text-muted">Email</label>
+                            <p class="fw-bold">{{ user.email }}</p>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label text-muted">Phone Number</label>
+                            <p class="fw-bold">{{ user.phone_number|default:"Not provided" }}</p>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label text-muted">Date of Birth</label>
+                            <p class="fw-bold">{{ user.date_of_birth|date:"F j, Y"|default:"Not provided" }}</p>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label text-muted">Role</label>
+                            <p class="fw-bold">
+                                <span class="badge bg-primary">{{ user.get_role_display }}</span>
+                            </p>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label text-muted">Date Joined</label>
+                            <p class="fw-bold">{{ user.date_joined|date:"F j, Y" }}</p>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label text-muted">Last Login</label>
+                            <p class="fw-bold">{{ user.last_login|date:"F j, Y g:i A"|default:"Never" }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Profile Picture -->
+        <div class="col-lg-4">
+            <div class="card shadow">
+                <div class="card-body text-center">
+                    {% if user.profile_picture %}
+                        <img src="{{ user.profile_picture.url }}" 
+                             class="rounded-circle shadow mb-3" 
+                             width="150" height="150" 
+                             alt="{{ user.get_full_name }}">
+                    {% else %}
+                        <div class="bg-secondary rounded-circle mx-auto d-flex align-items-center justify-content-center shadow mb-3" 
+                             style="width: 150px; height: 150px;">
+                            <i class="bi bi-person text-white" style="font-size: 4rem;"></i>
+                        </div>
+                    {% endif %}
+                    
+                    <h4 class="mb-2">{{ user.get_full_name }}</h4>
+                    <p class="text-muted mb-3">{{ user.email }}</p>
+                    
+                    <div class="text-center">
+                        <span class="badge bg-primary fs-6">System Administrator</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

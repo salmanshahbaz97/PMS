@@ -1,0 +1,296 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Admin Dashboard - Player Management System{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h3 mb-0">
+                        <i class="bi bi-speedometer2 me-2 text-primary"></i>
+                        Admin Dashboard
+                    </h1>
+                    <p class="text-muted mb-0">Welcome back, {{ user.get_full_name }}!</p>
+                </div>
+                <div class="text-end">
+                    <small class="text-muted">Last updated: {{ "now"|date:"F j, Y g:i A" }}</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Total Users
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_users }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-people-fill fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Coaches
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_coaches }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-person-badge fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Total Players
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_players }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-person-running fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                Active Players
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ active_players }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-check-circle-fill fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Content Row -->
+    <div class="row">
+        <!-- Recent Players -->
+        <div class="col-xl-6 col-lg-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="bi bi-person-plus me-2"></i>Recent Players
+                    </h6>
+                    <a href="{% url 'core:player_list' %}" class="btn btn-sm btn-primary">
+                        View All
+                    </a>
+                </div>
+                <div class="card-body">
+                    {% if recent_players %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Player</th>
+                                        <th>Position</th>
+                                        <th>Coach</th>
+                                        <th>Joined</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for player in recent_players %}
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                {% if player.user.profile_picture %}
+                                                    <img src="{{ player.user.profile_picture.url }}" 
+                                                         class="rounded-circle me-2" 
+                                                         width="32" height="32" 
+                                                         alt="{{ player.user.get_full_name }}">
+                                                {% else %}
+                                                    <div class="bg-secondary rounded-circle me-2 d-flex align-items-center justify-content-center" 
+                                                         style="width: 32px; height: 32px;">
+                                                        <i class="bi bi-person text-white"></i>
+                                                    </div>
+                                                {% endif %}
+                                                <div>
+                                                    <div class="fw-bold">{{ player.user.get_full_name }}</div>
+                                                    <small class="text-muted">#{{ player.jersey_number|default:"N/A" }}</small>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>{{ player.position|default:"N/A" }}</td>
+                                        <td>
+                                            {% if player.coach %}
+                                                {{ player.coach.user.get_full_name }}
+                                            {% else %}
+                                                <span class="text-muted">Unassigned</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ player.join_date|date:"M j, Y" }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="bi bi-people text-muted" style="font-size: 3rem;"></i>
+                            <p class="text-muted mt-2">No players found</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Coaches -->
+        <div class="col-xl-6 col-lg-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="bi bi-person-badge me-2"></i>Recent Coaches
+                    </h6>
+                    <a href="{% url 'core:coach_list' %}" class="btn btn-sm btn-primary">
+                        View All
+                    </a>
+                </div>
+                <div class="card-body">
+                    {% if recent_coaches %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Coach</th>
+                                        <th>Specialization</th>
+                                        <th>Experience</th>
+                                        <th>Hired</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for coach in recent_coaches %}
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                {% if coach.user.profile_picture %}
+                                                    <img src="{{ coach.user.profile_picture.url }}" 
+                                                         class="rounded-circle me-2" 
+                                                         width="32" height="32" 
+                                                         alt="{{ coach.user.get_full_name }}">
+                                                {% else %}
+                                                    <div class="bg-secondary rounded-circle me-2 d-flex align-items-center justify-content-center" 
+                                                         style="width: 32px; height: 32px;">
+                                                        <i class="bi bi-person text-white"></i>
+                                                    </div>
+                                                {% endif %}
+                                                <div>
+                                                    <div class="fw-bold">{{ coach.user.get_full_name }}</div>
+                                                    <small class="text-muted">{{ coach.user.email }}</small>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>{{ coach.specialization|default:"N/A" }}</td>
+                                        <td>{{ coach.experience_years }} years</td>
+                                        <td>{{ coach.hire_date|date:"M j, Y" }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="bi bi-person-badge text-muted" style="font-size: 3rem;"></i>
+                            <p class="text-muted mt-2">No coaches found</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="bi bi-lightning me-2"></i>Quick Actions
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <a href="{% url 'admin:core_user_add' %}" class="btn btn-outline-primary w-100">
+                                <i class="bi bi-person-plus me-2"></i>Add User
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <a href="{% url 'admin:core_coach_add' %}" class="btn btn-outline-success w-100">
+                                <i class="bi bi-person-badge me-2"></i>Add Coach
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <a href="{% url 'admin:core_player_add' %}" class="btn btn-outline-info w-100">
+                                <i class="bi bi-person-running me-2"></i>Add Player
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <a href="{% url 'admin:index' %}" class="btn btn-outline-secondary w-100">
+                                <i class="bi bi-gear me-2"></i>Admin Panel
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .border-left-primary {
+        border-left: 0.25rem solid #4e73df !important;
+    }
+    .border-left-success {
+        border-left: 0.25rem solid #1cc88a !important;
+    }
+    .border-left-info {
+        border-left: 0.25rem solid #36b9cc !important;
+    }
+    .border-left-warning {
+        border-left: 0.25rem solid #f6c23e !important;
+    }
+    .text-gray-800 {
+        color: #5a5c69 !important;
+    }
+    .text-gray-300 {
+        color: #dddfeb !important;
+    }
+</style>
+{% endblock %} 

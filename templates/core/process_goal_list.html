@@ -1,0 +1,340 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Process Goals - {{ goal.name }} - Player Management System{% endblock %}
+
+{% csrf_token %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2 class="mb-0">
+                        <i class="bi bi-list-check text-primary me-2"></i>
+                        Process Goals
+                    </h2>
+                    <p class="text-muted mb-0">for "{{ goal.name }}"</p>
+                </div>
+                {% if user.is_coach_prop or user.is_admin_prop %}
+                <a href="{% url 'core:process_goal_create' goal.pk %}" class="btn btn-primary">
+                    <i class="bi bi-plus-circle me-1"></i>Add Process Goal
+                </a>
+                {% endif %}
+            </div>
+            
+            <!-- Goal Summary Card -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <h5 class="card-title">{{ goal.name }}</h5>
+                            <p class="text-muted mb-2">{{ goal.description|default:"No description provided" }}</p>
+                            <div class="row">
+                                <div class="col-6">
+                                    <small class="text-muted">Area</small>
+                                    <div class="badge bg-info">{{ goal.get_area_display }}</div>
+                                </div>
+                                <div class="col-6">
+                                    <small class="text-muted">Timeframe</small>
+                                    <div class="badge bg-secondary">{{ goal.get_timeframe_display }}</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="text-end">
+                                <h6>Overall Progress</h6>
+                                <div class="progress mb-2" style="height: 10px;">
+                                    <div class="progress-bar bg-success" role="progressbar" 
+                                         style="width: {% if goal.get_process_goals_count > 0 %}{{ goal.get_completion_percentage }}{% else %}{{ goal.get_progress_percentage }}{% endif %}%"></div>
+                                </div>
+                                <small class="text-muted">
+                                    {% if goal.get_process_goals_count > 0 %}
+                                        {{ goal.get_completed_process_goals_count }} of {{ goal.get_process_goals_count }} completed
+                                    {% else %}
+                                        {{ goal.get_progress_display }}
+                                    {% endif %}
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Process Goals List -->
+            {% if process_goals %}
+            <div class="row">
+                {% for process_goal in process_goals %}
+                <div class="col-lg-6 col-xl-4 mb-4">
+                    <div class="card h-100 shadow-sm border-0">
+                        <div class="card-header bg-transparent border-0 pb-0">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h6 class="card-title mb-1">{{ process_goal.name }}</h6>
+                                    <small class="text-muted">Step {{ process_goal.order }}</small>
+                                </div>
+                                <div class="dropdown">
+                                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                        <i class="bi bi-three-dots"></i>
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        {% if user.is_coach_prop or user.is_admin_prop %}
+                                        <li><a class="dropdown-item" href="{% url 'core:process_goal_update' process_goal.pk %}">
+                                            <i class="bi bi-pencil me-2"></i>Edit
+                                        </a></li>
+                                        {% endif %}
+                                        {% if user.is_player_prop or user.is_coach_prop or user.is_admin_prop %}
+                                        <li><a class="dropdown-item" href="#" onclick="updateProcessProgress({{ process_goal.pk }})">
+                                            <i class="bi bi-arrow-up-circle me-2"></i>Update Progress
+                                        </a></li>
+                                        {% endif %}
+                                    </ul>
+                                </div>
+                                
+                                <!-- Action buttons outside dropdown for easier access -->
+                                <div class="btn-group ms-2" role="group">
+                                    {% if user.is_coach_prop or user.is_admin_prop %}
+                                    <a href="{% url 'core:process_goal_update' process_goal.pk %}" class="btn btn-sm btn-outline-primary" title="Edit Process Goal">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    {% endif %}
+                                    {% if user.is_player_prop or user.is_coach_prop or user.is_admin_prop %}
+                                    <button class="btn btn-sm btn-outline-warning" onclick="updateProcessProgress({{ process_goal.pk }})" title="Update Progress">
+                                        <i class="bi bi-arrow-up-circle"></i>
+                                    </button>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="card-body">
+                            <!-- Progress Bar -->
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <small class="text-muted">Progress</small>
+                                    <small class="text-muted">{{ process_goal.get_progress_percentage }}%</small>
+                                </div>
+                                <div class="progress" style="height: 8px;">
+                                    <div class="progress-bar bg-success" role="progressbar" 
+                                         style="width: {{ process_goal.get_progress_percentage }}%"></div>
+                                </div>
+                                <small class="text-muted">{{ process_goal.get_progress_display }}</small>
+                            </div>
+                            
+                            {% if process_goal.target_date %}
+                            <div class="mb-2">
+                                <small class="text-muted">
+                                    <i class="bi bi-calendar me-1"></i>Target: {{ process_goal.target_date|date:"M d, Y" }}
+                                </small>
+                                {% if process_goal.is_overdue %}
+                                <span class="badge bg-danger ms-2">Overdue</span>
+                                {% endif %}
+                            </div>
+                            {% endif %}
+                            
+                            {% if process_goal.description %}
+                            <p class="card-text small text-muted">{{ process_goal.description|truncatewords:15 }}</p>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="card-footer bg-transparent border-0 pt-0">
+                            <small class="text-muted">
+                                <i class="bi bi-clock me-1"></i>Created {{ process_goal.created_at|timesince }} ago
+                            </small>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            
+            <!-- Pagination -->
+            {% if is_paginated %}
+            <nav aria-label="Process goals pagination" class="mt-4">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1">
+                            <i class="bi bi-chevron-double-left"></i>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}">
+                            <i class="bi bi-chevron-left"></i>
+                        </a>
+                    </li>
+                    {% endif %}
+                    
+                    <li class="page-item active">
+                        <span class="page-link">{{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+                    </li>
+                    
+                    {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}">
+                            <i class="bi bi-chevron-right"></i>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">
+                            <i class="bi bi-chevron-double-right"></i>
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+            
+            {% else %}
+            <div class="text-center py-5">
+                <i class="bi bi-list-check display-1 text-muted"></i>
+                <h4 class="mt-3 text-muted">No process goals found</h4>
+                <p class="text-muted">{% if user.is_coach_prop %}Create your first process goal to break down this goal into manageable steps.{% else %}No process goals have been created yet.{% endif %}</p>
+                {% if user.is_coach_prop %}
+                <a href="{% url 'core:process_goal_create' goal.pk %}" class="btn btn-primary">
+                    <i class="bi bi-plus-circle me-1"></i>Create First Process Goal
+                </a>
+                {% endif %}
+            </div>
+            {% endif %}
+            
+            <!-- Back to Goals -->
+            <div class="mt-4">
+                <a href="{% url 'core:goal_list' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left me-1"></i>Back to Goals
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Process Goal Progress Update Modal -->
+<div class="modal fade" id="processProgressModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Update Process Goal Progress</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="processProgressForm">
+                    <div class="mb-3">
+                        <label for="processProgress" class="form-label">Progress Status</label>
+                        <select class="form-select" id="processProgress" name="progress" required>
+                            <option value="not_started">Not Started</option>
+                            <option value="in_progress">In Progress</option>
+                            <option value="good_progress">Good Progress</option>
+                            <option value="excellent_progress">Excellent Progress</option>
+                            <option value="completed">Completed</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="processNotes" class="form-label">Notes (Optional)</label>
+                        <textarea class="form-control" id="processNotes" name="notes" rows="3" placeholder="Add any notes about your progress..."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="saveProcessProgress()">Update Progress</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Process Goal specific variables and functions
+let currentProcessGoalId = null;
+
+function updateProcessProgress(processGoalId) {
+    console.log('Updating process goal progress for ID:', processGoalId);
+    currentProcessGoalId = processGoalId;
+    
+    // Check if modal element exists
+    const modalElement = document.getElementById('processProgressModal');
+    if (!modalElement) {
+        console.error('Modal element not found!');
+        alert('Error: Modal not found. Please refresh the page.');
+        return;
+    }
+    
+    const modal = new bootstrap.Modal(modalElement);
+    modal.show();
+    
+    // Reset form
+    document.getElementById('processProgressForm').reset();
+}
+
+function saveProcessProgress() {
+    console.log('Saving process goal progress for ID:', currentProcessGoalId);
+    
+    if (!currentProcessGoalId) {
+        alert('Error: No process goal selected. Please try again.');
+        return;
+    }
+    
+    const progressElement = document.getElementById('processProgress');
+    const notesElement = document.getElementById('processNotes');
+    
+    if (!progressElement || !notesElement) {
+        console.error('Form elements not found!');
+        alert('Error: Form elements not found. Please refresh the page.');
+        return;
+    }
+    
+    const progress = progressElement.value;
+    const notes = notesElement.value;
+    
+    console.log('Progress:', progress);
+    console.log('Notes:', notes);
+    
+    // Get CSRF token
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    
+    fetch(`{% url 'core:process_goal_progress_update' 0 %}`.replace('0', currentProcessGoalId), {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': csrfToken
+        },
+        body: `progress=${encodeURIComponent(progress)}&notes=${encodeURIComponent(notes)}`
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            // Close modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('processProgressModal'));
+            modal.hide();
+            
+            // Show success message
+            if (data.main_goal_completed) {
+                alert('Process goal updated successfully! The main goal has been automatically completed!');
+            } else {
+                alert('Process goal updated successfully!');
+            }
+            
+            // Reload page to show updated progress
+            location.reload();
+        } else {
+            alert('Error updating progress: ' + (data.error || 'Unknown error'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error updating progress. Please try again.');
+    });
+}
+
+// Ensure these functions are not overridden by other scripts
+window.updateProcessProgress = updateProcessProgress;
+window.saveProcessProgress = saveProcessProgress;
+</script>
+{% endblock %} 

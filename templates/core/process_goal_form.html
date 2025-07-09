@@ -1,0 +1,170 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{% if form.instance.pk %}Edit{% else %}Create{% endif %} Process Goal - Player Management System{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-lg-8 col-xl-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="bi bi-list-check me-2"></i>
+                        {% if form.instance.pk %}Edit{% else %}Create{% endif %} Process Goal
+                    </h4>
+                    <p class="mb-0 mt-1">for "{{ goal.name }}"</p>
+                </div>
+                <div class="card-body">
+                    <form method="post" class="needs-validation" novalidate>
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <div class="col-md-8">
+                                <div class="mb-3">
+                                    <label for="{{ form.name.id_for_label }}" class="form-label">
+                                        Process Goal Name <span class="text-danger">*</span>
+                                    </label>
+                                    {{ form.name }}
+                                    {% if form.name.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.name.errors.0 }}
+                                    </div>
+                                    {% endif %}
+                                    <div class="form-text">Enter a clear, actionable step to achieve the main goal.</div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="{{ form.order.id_for_label }}" class="form-label">
+                                        Step Order <span class="text-danger">*</span>
+                                    </label>
+                                    {{ form.order }}
+                                    {% if form.order.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.order.errors.0 }}
+                                    </div>
+                                    {% endif %}
+                                    <div class="form-text">The sequence number for this step.</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.description.id_for_label }}" class="form-label">
+                                Description
+                            </label>
+                            {{ form.description }}
+                            {% if form.description.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.description.errors.0 }}
+                            </div>
+                            {% endif %}
+                            <div class="form-text">Provide detailed instructions for completing this step.</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.target_date.id_for_label }}" class="form-label">
+                                Target Date
+                            </label>
+                            {{ form.target_date }}
+                            {% if form.target_date.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.target_date.errors.0 }}
+                            </div>
+                            {% endif %}
+                            <div class="form-text">When should this step be completed?</div>
+                        </div>
+                        
+                        {% if user.is_coach_prop or user.is_admin_prop %}
+                        <div class="mb-3">
+                            <label for="{{ form.progress.id_for_label }}" class="form-label">
+                                Initial Progress Status
+                            </label>
+                            {{ form.progress }}
+                            {% if form.progress.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.progress.errors.0 }}
+                            </div>
+                            {% endif %}
+                            <div class="form-text">Set the initial progress status for this process goal.</div>
+                        </div>
+                        {% elif user.is_player_prop %}
+                        <div class="mb-3">
+                            <label for="{{ form.progress.id_for_label }}" class="form-label">
+                                Progress Status
+                            </label>
+                            {{ form.progress }}
+                            {% if form.progress.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.progress.errors.0 }}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.notes.id_for_label }}" class="form-label">
+                                Notes
+                            </label>
+                            {{ form.notes }}
+                            {% if form.notes.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.notes.errors.0 }}
+                            </div>
+                            {% endif %}
+                            <div class="form-text">Add any notes about your progress on this step.</div>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'core:process_goal_list' goal.pk %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left me-1"></i>Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle me-1"></i>
+                                {% if form.instance.pk %}Update{% else %}Create{% endif %} Process Goal
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Goal Summary -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="bi bi-info-circle me-2"></i>Main Goal Summary
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <h6>{{ goal.name }}</h6>
+                    <p class="text-muted mb-2">{{ goal.description|default:"No description provided" }}</p>
+                    <div class="row">
+                        <div class="col-6">
+                            <small class="text-muted">Area</small>
+                            <div class="badge bg-info">{{ goal.get_area_display }}</div>
+                        </div>
+                        <div class="col-6">
+                            <small class="text-muted">Timeframe</small>
+                            <div class="badge bg-secondary">{{ goal.get_timeframe_display }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-control, .form-select {
+        border-radius: 0.375rem;
+    }
+    
+    .form-control:focus, .form-select:focus {
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+    }
+</style>
+{% endblock %} 

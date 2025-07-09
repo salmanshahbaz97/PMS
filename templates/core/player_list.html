@@ -1,0 +1,314 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Players - Player Management System{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h3 mb-0">
+                        <i class="bi bi-people me-2 text-info"></i>
+                        Players
+                    </h1>
+                    <p class="text-muted mb-0">
+                        {% if user_role == 'admin' %}
+                            All players in the system
+                        {% elif user_role == 'coach' %}
+                            Your assigned players
+                        {% else %}
+                            Player directory
+                        {% endif %}
+                    </p>
+                </div>
+                {% if user_role == 'admin' %}
+                <div>
+                    <a href="{% url 'admin:core_player_add' %}" class="btn btn-primary">
+                        <i class="bi bi-person-plus me-2"></i>Add Player
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Search and Filters -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-body">
+                    <form method="get" class="row g-3">
+                        <div class="col-md-6">
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="bi bi-search"></i>
+                                </span>
+                                <input type="text" 
+                                       class="form-control table-search" 
+                                       name="search" 
+                                       placeholder="Search players by name, position, or jersey number..."
+                                       value="{{ request.GET.search }}">
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <select name="position" class="form-select">
+                                <option value="">All Positions</option>
+                                <option value="Forward" {% if request.GET.position == 'Forward' %}selected{% endif %}>Forward</option>
+                                <option value="Midfielder" {% if request.GET.position == 'Midfielder' %}selected{% endif %}>Midfielder</option>
+                                <option value="Defender" {% if request.GET.position == 'Defender' %}selected{% endif %}>Defender</option>
+                                <option value="Goalkeeper" {% if request.GET.position == 'Goalkeeper' %}selected{% endif %}>Goalkeeper</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-search me-2"></i>Search
+                                </button>
+                                <a href="{% url 'core:player_list' %}" class="btn btn-outline-secondary">
+                                    <i class="bi bi-arrow-clockwise me-2"></i>Reset
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Players List -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="bi bi-list-ul me-2"></i>
+                        Player List ({{ players|length }})
+                    </h6>
+                    <div class="d-flex align-items-center">
+                        <small class="text-muted me-3">
+                            Showing {{ page_obj.start_index|default:1 }} to {{ page_obj.end_index|default:players|length }} of {{ page_obj.paginator.count|default:players|length }} entries
+                        </small>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if players %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Player</th>
+                                        <th>Position</th>
+                                        <th>Jersey #</th>
+                                        <th>Age</th>
+                                        {% if user_role == 'admin' %}
+                                        <th>Coach</th>
+                                        {% endif %}
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for player in players %}
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                {% if player.user.profile_picture %}
+                                                    <img src="{{ player.user.profile_picture.url }}" 
+                                                         class="rounded-circle me-3" 
+                                                         width="50" height="50" 
+                                                         alt="{{ player.user.get_full_name }}">
+                                                {% else %}
+                                                    <div class="bg-secondary rounded-circle me-3 d-flex align-items-center justify-content-center" 
+                                                         style="width: 50px; height: 50px;">
+                                                        <i class="bi bi-person text-white"></i>
+                                                    </div>
+                                                {% endif %}
+                                                <div>
+                                                    <div class="fw-bold">{{ player.user.get_full_name }}</div>
+                                                    <small class="text-muted">{{ player.user.email }}</small>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            {% if player.position %}
+                                                <span class="badge bg-info">{{ player.position }}</span>
+                                            {% else %}
+                                                <span class="text-muted">N/A</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if player.jersey_number %}
+                                                <span class="badge bg-dark">#{{ player.jersey_number }}</span>
+                                            {% else %}
+                                                <span class="text-muted">N/A</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if player.get_age %}
+                                                {{ player.get_age }} years
+                                            {% else %}
+                                                <span class="text-muted">N/A</span>
+                                            {% endif %}
+                                        </td>
+                                        {% if user_role == 'admin' %}
+                                        <td>
+                                            {% if player.coach %}
+                                                <div class="d-flex align-items-center">
+                                                    {% if player.coach.user.profile_picture %}
+                                                        <img src="{{ player.coach.user.profile_picture.url }}" 
+                                                             class="rounded-circle me-2" 
+                                                             width="30" height="30" 
+                                                             alt="{{ player.coach.user.get_full_name }}">
+                                                    {% else %}
+                                                        <div class="bg-secondary rounded-circle me-2 d-flex align-items-center justify-content-center" 
+                                                             style="width: 30px; height: 30px;">
+                                                            <i class="bi bi-person text-white" style="font-size: 0.8rem;"></i>
+                                                        </div>
+                                                    {% endif %}
+                                                    <span>{{ player.coach.user.get_full_name }}</span>
+                                                </div>
+                                            {% else %}
+                                                <span class="text-muted">Unassigned</span>
+                                            {% endif %}
+                                        </td>
+                                        {% endif %}
+                                        <td>
+                                            {% if player.is_active %}
+                                                <span class="badge bg-success">Active</span>
+                                            {% else %}
+                                                <span class="badge bg-danger">Inactive</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <div class="btn-group" role="group">
+                                                <a href="{% url 'core:player_detail' player.pk %}" 
+                                                   class="btn btn-sm btn-outline-primary"
+                                                   data-bs-toggle="tooltip"
+                                                   title="View Details">
+                                                    <i class="bi bi-eye"></i>
+                                                </a>
+                                                {% if user_role == 'admin' %}
+                                                <a href="{% url 'admin:core_player_change' player.pk %}" 
+                                                   class="btn btn-sm btn-outline-warning"
+                                                   data-bs-toggle="tooltip"
+                                                   title="Edit Player">
+                                                    <i class="bi bi-pencil"></i>
+                                                </a>
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Pagination -->
+                        {% if is_paginated %}
+                        <nav aria-label="Player pagination" class="mt-4">
+                            <ul class="pagination justify-content-center">
+                                {% if page_obj.has_previous %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page=1{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.position %}&position={{ request.GET.position }}{% endif %}">
+                                            <i class="bi bi-chevron-double-left"></i>
+                                        </a>
+                                    </li>
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.position %}&position={{ request.GET.position }}{% endif %}">
+                                            <i class="bi bi-chevron-left"></i>
+                                        </a>
+                                    </li>
+                                {% endif %}
+
+                                {% for num in page_obj.paginator.page_range %}
+                                    {% if page_obj.number == num %}
+                                        <li class="page-item active">
+                                            <span class="page-link">{{ num }}</span>
+                                        </li>
+                                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ num }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.position %}&position={{ request.GET.position }}{% endif %}">{{ num }}</a>
+                                        </li>
+                                    {% endif %}
+                                {% endfor %}
+
+                                {% if page_obj.has_next %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.position %}&position={{ request.GET.position }}{% endif %}">
+                                            <i class="bi bi-chevron-right"></i>
+                                        </a>
+                                    </li>
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.position %}&position={{ request.GET.position }}{% endif %}">
+                                            <i class="bi bi-chevron-double-right"></i>
+                                        </a>
+                                    </li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                        {% endif %}
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="bi bi-people text-muted" style="font-size: 4rem;"></i>
+                            <h5 class="text-muted mt-3">No Players Found</h5>
+                            <p class="text-muted">
+                                {% if request.GET.search or request.GET.position %}
+                                    No players match your search criteria. Try adjusting your filters.
+                                {% else %}
+                                    {% if user_role == 'admin' %}
+                                        No players have been added to the system yet.
+                                    {% elif user_role == 'coach' %}
+                                        No players have been assigned to you yet.
+                                    {% else %}
+                                        No players available.
+                                    {% endif %}
+                                {% endif %}
+                            </p>
+                            {% if user_role == 'admin' %}
+                            <a href="{% url 'admin:core_player_add' %}" class="btn btn-primary">
+                                <i class="bi bi-person-plus me-2"></i>Add First Player
+                            </a>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .table th {
+        background-color: #f8f9fc;
+        border: none;
+        font-weight: 600;
+        color: #5a5c69;
+    }
+    
+    .table td {
+        vertical-align: middle;
+        border-color: #e3e6f0;
+    }
+    
+    .btn-group .btn {
+        margin-right: 0.25rem;
+    }
+    
+    .pagination .page-link {
+        border-radius: 8px;
+        margin: 0 0.125rem;
+        border: none;
+        color: #667eea;
+    }
+    
+    .pagination .page-item.active .page-link {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+    }
+</style>
+{% endblock %} 

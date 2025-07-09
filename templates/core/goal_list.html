@@ -1,0 +1,501 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Goals - Player Management System{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="mb-0">
+                    <i class="bi bi-target text-primary me-2"></i>
+                    Goals
+                </h2>
+                {% if user.is_coach_prop %}
+                <a href="{% url 'core:goal_create' %}" class="btn btn-primary">
+                    <i class="bi bi-plus-circle me-1"></i>Create Goal
+                </a>
+                {% endif %}
+            </div>
+            
+
+            
+            <!-- Search and Filter -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <form method="get" class="row g-3">
+                        <div class="col-md-4">
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-search"></i></span>
+                                <input type="text" class="form-control" name="search" 
+                                       placeholder="Search goals..." value="{{ request.GET.search }}">
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <select name="area" class="form-select">
+                                <option value="">All Areas</option>
+                                <option value="physical" {% if request.GET.area == 'physical' %}selected{% endif %}>Physical</option>
+                                <option value="technical" {% if request.GET.area == 'technical' %}selected{% endif %}>Technical</option>
+                                <option value="tactical" {% if request.GET.area == 'tactical' %}selected{% endif %}>Tactical</option>
+                                <option value="mental" {% if request.GET.area == 'mental' %}selected{% endif %}>Mental</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <select name="progress" class="form-select">
+                                <option value="">All Progress</option>
+                                <option value="not_started" {% if request.GET.progress == 'not_started' %}selected{% endif %}>Not Started</option>
+                                <option value="in_progress" {% if request.GET.progress == 'in_progress' %}selected{% endif %}>In Progress</option>
+                                <option value="good_progress" {% if request.GET.progress == 'good_progress' %}selected{% endif %}>Good Progress</option>
+                                <option value="excellent_progress" {% if request.GET.progress == 'excellent_progress' %}selected{% endif %}>Excellent Progress</option>
+                                <option value="completed" {% if request.GET.progress == 'completed' %}selected{% endif %}>Completed</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <select name="timeframe" class="form-select">
+                                <option value="">All Timeframes</option>
+                                <option value="short_term" {% if request.GET.timeframe == 'short_term' %}selected{% endif %}>Short Term</option>
+                                <option value="medium_term" {% if request.GET.timeframe == 'medium_term' %}selected{% endif %}>Medium Term</option>
+                                <option value="long_term" {% if request.GET.timeframe == 'long_term' %}selected{% endif %}>Long Term</option>
+                            </select>
+                        </div>
+                        <div class="col-md-1">
+                            <button type="submit" class="btn btn-outline-primary w-100">
+                                <i class="bi bi-funnel me-1"></i>Filter
+                            </button>
+                        </div>
+                        <div class="col-md-1">
+                            <a href="{% url 'core:goal_list' %}" class="btn btn-outline-secondary w-100" title="Clear Filters">
+                                <i class="bi bi-x-circle"></i>
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Goals List -->
+            {% if goals %}
+            <div class="row">
+                {% for goal in goals %}
+                <div class="col-lg-6 col-xl-4 mb-4">
+                    <div class="card h-100 shadow-sm border-0">
+                        <div class="card-header bg-transparent border-0 pb-0">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h5 class="card-title mb-1">{{ goal.name }}</h5>
+                                    <p class="text-muted small mb-0">
+                                        <i class="bi bi-person me-1"></i>{{ goal.player.user.get_full_name }}
+                                    </p>
+                                </div>
+                                <div class="dropdown">
+                                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                        <i class="bi bi-three-dots"></i>
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        <li><a class="dropdown-item" href="{% url 'core:goal_detail' goal.pk %}">
+                                            <i class="bi bi-eye me-2"></i>View Details
+                                        </a></li>
+                                        {% if user.is_coach_prop or user.is_admin_prop %}
+                                        <li><a class="dropdown-item" href="{% url 'core:goal_update' goal.pk %}">
+                                            <i class="bi bi-pencil me-2"></i>Edit Goal
+                                        </a></li>
+                                        <li><a class="dropdown-item" href="{% url 'core:process_goal_list' goal.pk %}">
+                                            <i class="bi bi-list-check me-2"></i>Manage Process Goals
+                                        </a></li>
+                                        {% endif %}
+                                        <!-- Debug info: User role = {{ user.role }}, is_player = {{ user.is_player_prop }}, is_coach = {{ user.is_coach_prop }}, is_admin = {{ user.is_admin_prop }} -->
+                                        {% if user.is_player_prop or user.is_coach_prop or user.is_admin_prop %}
+                                        <li><a class="dropdown-item" href="#" onclick="updateProgress({{ goal.pk }})">
+                                            <i class="bi bi-arrow-up-circle me-2"></i>Update Progress
+                                        </a></li>
+                                        {% endif %}
+                                    </ul>
+                                </div>
+                                
+                                <!-- Action buttons outside dropdown for easier access -->
+                                <div class="btn-group ms-2" role="group">
+                                    {% if user.is_coach_prop or user.is_admin_prop %}
+                                    <a href="{% url 'core:goal_update' goal.pk %}" class="btn btn-sm btn-outline-primary" title="Edit Goal">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <a href="{% url 'core:process_goal_list' goal.pk %}" class="btn btn-sm btn-outline-success" title="Manage Process Goals">
+                                        <i class="bi bi-list-check"></i>
+                                    </a>
+                                    {% endif %}
+                                    {% if user.is_player_prop or user.is_coach_prop or user.is_admin_prop %}
+                                    <button class="btn btn-sm btn-outline-warning" onclick="updateProgress({{ goal.pk }})" title="Update Progress">
+                                        <i class="bi bi-arrow-up-circle"></i>
+                                    </button>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="card-body">
+                            <div class="row mb-3">
+                                <div class="col-6">
+                                    <small class="text-muted">Area</small>
+                                    <div class="badge bg-info">{{ goal.get_area_display }}</div>
+                                </div>
+                                <div class="col-6">
+                                    <small class="text-muted">Timeframe</small>
+                                    <div class="badge bg-secondary">{{ goal.get_timeframe_display }}</div>
+                                </div>
+                            </div>
+                            
+                            <!-- Progress Bar -->
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <small class="text-muted">Progress</small>
+                                    <small class="text-muted">
+                                        {% if goal.get_process_goals_count > 0 %}
+                                            {{ goal.get_completion_percentage }}% ({{ goal.get_completed_process_goals_count }}/{{ goal.get_process_goals_count }})
+                                        {% else %}
+                                            {{ goal.get_progress_percentage }}%
+                                        {% endif %}
+                                    </small>
+                                </div>
+                                <div class="progress" style="height: 8px;">
+                                    <div class="progress-bar bg-success" role="progressbar" 
+                                         style="width: {% if goal.get_process_goals_count > 0 %}{{ goal.get_completion_percentage }}{% else %}{{ goal.get_progress_percentage }}{% endif %}%"></div>
+                                </div>
+                                <small class="text-muted">
+                                    {% if goal.get_process_goals_count > 0 %}
+                                        {{ goal.get_completed_process_goals_count }} of {{ goal.get_process_goals_count }} process goals completed
+                                    {% else %}
+                                        {{ goal.get_progress_display }}
+                                    {% endif %}
+                                </small>
+                            </div>
+                            
+                            {% if goal.target_date %}
+                            <div class="mb-2">
+                                <small class="text-muted">
+                                    <i class="bi bi-calendar me-1"></i>Target: {{ goal.target_date|date:"M d, Y" }}
+                                </small>
+                                {% if goal.is_overdue %}
+                                <span class="badge bg-danger ms-2">Overdue</span>
+                                {% endif %}
+                            </div>
+                            {% endif %}
+                            
+                            {% if goal.description %}
+                            <p class="card-text small text-muted">{{ goal.description|truncatewords:20 }}</p>
+                            {% endif %}
+                            
+                            <!-- Process Goals Section for Players -->
+                            {% if goal.get_process_goals_count > 0 and user.is_player_prop %}
+                            <div class="mt-3 pt-3 border-top">
+                                <h6 class="text-muted mb-2">
+                                    <i class="bi bi-list-check me-1"></i>Process Goals
+                                </h6>
+                                <div class="row">
+                                    {% for process_goal in goal.process_goals.all|slice:":3" %}
+                                    <div class="col-12 mb-2">
+                                        <div class="d-flex justify-content-between align-items-center p-2 bg-light rounded">
+                                            <div class="flex-grow-1">
+                                                <small class="fw-medium">{{ process_goal.name }}</small>
+                                                <div class="progress mt-1" style="height: 4px;">
+                                                    <div class="progress-bar bg-success" role="progressbar" 
+                                                         style="width: {{ process_goal.get_progress_percentage }}%"></div>
+                                                </div>
+                                                <small class="text-muted">{{ process_goal.get_progress_display }}</small>
+                                            </div>
+                                            <button class="btn btn-sm btn-outline-primary ms-2" 
+                                                    onclick="updateProcessProgress({{ process_goal.pk }})" 
+                                                    title="Update Process Goal Progress">
+                                                <i class="bi bi-arrow-up-circle"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                    {% if goal.get_process_goals_count > 3 %}
+                                    <div class="col-12">
+                                        <small class="text-muted">
+                                            +{{ goal.get_process_goals_count|add:"-3" }} more process goals
+                                        </small>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="card-footer bg-transparent border-0 pt-0">
+                            <small class="text-muted">
+                                <i class="bi bi-clock me-1"></i>Created {{ goal.created_at|timesince }} ago
+                            </small>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            
+            <!-- Pagination -->
+            {% if is_paginated %}
+            <nav aria-label="Goals pagination" class="mt-4">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.area %}&area={{ request.GET.area }}{% endif %}{% if request.GET.progress %}&progress={{ request.GET.progress }}{% endif %}{% if request.GET.timeframe %}&timeframe={{ request.GET.timeframe }}{% endif %}">
+                            <i class="bi bi-chevron-double-left"></i>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.area %}&area={{ request.GET.area }}{% endif %}{% if request.GET.progress %}&progress={{ request.GET.progress }}{% endif %}{% if request.GET.timeframe %}&timeframe={{ request.GET.timeframe }}{% endif %}">
+                            <i class="bi bi-chevron-left"></i>
+                        </a>
+                    </li>
+                    {% endif %}
+                    
+                    <li class="page-item active">
+                        <span class="page-link">{{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+                    </li>
+                    
+                    {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.area %}&area={{ request.GET.area }}{% endif %}{% if request.GET.progress %}&progress={{ request.GET.progress }}{% endif %}{% if request.GET.timeframe %}&timeframe={{ request.GET.timeframe }}{% endif %}">
+                            <i class="bi bi-chevron-right"></i>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.area %}&area={{ request.GET.area }}{% endif %}{% if request.GET.progress %}&progress={{ request.GET.progress }}{% endif %}{% if request.GET.timeframe %}&timeframe={{ request.GET.timeframe }}{% endif %}">
+                            <i class="bi bi-chevron-double-right"></i>
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+            
+            {% else %}
+            <div class="text-center py-5">
+                <i class="bi bi-target display-1 text-muted"></i>
+                <h4 class="mt-3 text-muted">No goals found</h4>
+                <p class="text-muted">{% if user.is_coach_prop %}Create your first goal to get started.{% else %}No goals have been assigned yet.{% endif %}</p>
+                {% if user.is_coach_prop %}
+                <a href="{% url 'core:goal_create' %}" class="btn btn-primary">
+                    <i class="bi bi-plus-circle me-1"></i>Create First Goal
+                </a>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Progress Update Modal -->
+<div class="modal fade" id="progressModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Update Goal Progress</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="progressForm">
+                    <div class="mb-3">
+                        <label for="progress" class="form-label">Progress Status</label>
+                        <select class="form-select" id="progress" name="progress" required>
+                            <option value="not_started">Not Started</option>
+                            <option value="in_progress">In Progress</option>
+                            <option value="good_progress">Good Progress</option>
+                            <option value="excellent_progress">Excellent Progress</option>
+                            <option value="completed">Completed</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="notes" class="form-label">Notes (Optional)</label>
+                        <textarea class="form-control" id="notes" name="notes" rows="3" placeholder="Add any notes about your progress..."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="saveProgress()">Update Progress</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Process Goal Progress Update Modal -->
+<div class="modal fade" id="processProgressModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Update Process Goal Progress</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="processProgressForm">
+                    <div class="mb-3">
+                        <label for="processProgress" class="form-label">Progress Status</label>
+                        <select class="form-select" id="processProgress" name="progress" required>
+                            <option value="not_started">Not Started</option>
+                            <option value="in_progress">In Progress</option>
+                            <option value="good_progress">Good Progress</option>
+                            <option value="excellent_progress">Excellent Progress</option>
+                            <option value="completed">Completed</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="processNotes" class="form-label">Notes (Optional)</label>
+                        <textarea class="form-control" id="processNotes" name="notes" rows="3" placeholder="Add any notes about your progress..."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="saveProcessProgress()">Update Progress</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let currentGoalId = null;
+
+function updateProgress(goalId) {
+    currentGoalId = goalId;
+    const modal = new bootstrap.Modal(document.getElementById('progressModal'));
+    modal.show();
+}
+
+function saveProgress() {
+    const progress = document.getElementById('progress').value;
+    const notes = document.getElementById('notes').value;
+    
+    // Get CSRF token
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    
+    fetch(`{% url 'core:goal_progress_update' 0 %}`.replace('0', currentGoalId), {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': csrfToken
+        },
+        body: `progress=${encodeURIComponent(progress)}&notes=${encodeURIComponent(notes)}`
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            // Close modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('progressModal'));
+            modal.hide();
+            
+            // Show success message
+            alert('Progress updated successfully!');
+            
+            // Reload page to show updated progress
+            location.reload();
+        } else {
+            alert('Error updating progress: ' + (data.error || 'Unknown error'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error updating progress. Please try again.');
+    });
+}
+
+// Process Goal Progress Update
+let currentProcessGoalId = null;
+
+function updateProcessProgress(processGoalId) {
+    console.log('Updating process goal progress for ID:', processGoalId);
+    currentProcessGoalId = processGoalId;
+    
+    // Check if modal element exists
+    const modalElement = document.getElementById('processProgressModal');
+    if (!modalElement) {
+        console.error('Process goal modal element not found!');
+        alert('Error: Modal not found. Please refresh the page.');
+        return;
+    }
+    
+    const modal = new bootstrap.Modal(modalElement);
+    modal.show();
+    
+    // Reset form
+    document.getElementById('processProgressForm').reset();
+}
+
+function saveProcessProgress() {
+    console.log('Saving process goal progress for ID:', currentProcessGoalId);
+    
+    if (!currentProcessGoalId) {
+        alert('Error: No process goal selected. Please try again.');
+        return;
+    }
+    
+    const progressElement = document.getElementById('processProgress');
+    const notesElement = document.getElementById('processNotes');
+    
+    if (!progressElement || !notesElement) {
+        console.error('Process goal form elements not found!');
+        alert('Error: Form elements not found. Please refresh the page.');
+        return;
+    }
+    
+    const progress = progressElement.value;
+    const notes = notesElement.value;
+    
+    console.log('Progress:', progress);
+    console.log('Notes:', notes);
+    
+    // Get CSRF token
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    
+    fetch(`{% url 'core:process_goal_progress_update' 0 %}`.replace('0', currentProcessGoalId), {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': csrfToken
+        },
+        body: `progress=${encodeURIComponent(progress)}&notes=${encodeURIComponent(notes)}`
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            // Close modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('processProgressModal'));
+            modal.hide();
+            
+            // Show success message
+            if (data.main_goal_completed) {
+                alert('Process goal updated successfully! The main goal has been automatically completed!');
+            } else {
+                alert('Process goal updated successfully!');
+            }
+            
+            // Reload page to show updated progress
+            location.reload();
+        } else {
+            alert('Error updating progress: ' + (data.error || 'Unknown error'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error updating progress. Please try again.');
+    });
+}
+
+// Ensure these functions are not overridden by other scripts
+window.updateProcessProgress = updateProcessProgress;
+window.saveProcessProgress = saveProcessProgress;
+</script>
+{% endblock %} 

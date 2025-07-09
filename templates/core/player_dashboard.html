@@ -1,0 +1,279 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Player Dashboard - Player Management System{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h3 mb-0">
+                        <i class="bi bi-person-running me-2 text-info"></i>
+                        Player Dashboard
+                    </h1>
+                    <p class="text-muted mb-0">Welcome back, {{ user.get_full_name }}!</p>
+                </div>
+                <div class="text-end">
+                    <small class="text-muted">Last updated: {{ "now"|date:"F j, Y g:i A" }}</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Player Profile Card -->
+    <div class="row mb-4">
+        <div class="col-lg-8">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="bi bi-person-circle me-2"></i>My Profile
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4 text-center mb-4">
+                            {% if user.profile_picture %}
+                                <img src="{{ user.profile_picture.url }}" 
+                                     class="rounded-circle shadow" 
+                                     width="150" height="150" 
+                                     alt="{{ user.get_full_name }}">
+                            {% else %}
+                                <div class="bg-secondary rounded-circle mx-auto d-flex align-items-center justify-content-center shadow" 
+                                     style="width: 150px; height: 150px;">
+                                    <i class="bi bi-person text-white" style="font-size: 4rem;"></i>
+                                </div>
+                            {% endif %}
+                            <h4 class="mt-3 mb-1">{{ user.get_full_name }}</h4>
+                            <p class="text-muted mb-0">{{ user.email }}</p>
+                        </div>
+                        <div class="col-md-8">
+                            <div class="row">
+                                <div class="col-sm-6 mb-3">
+                                    <label class="form-label text-muted">Full Name</label>
+                                    <p class="fw-bold">{{ user.get_full_name }}</p>
+                                </div>
+                                <div class="col-sm-6 mb-3">
+                                    <label class="form-label text-muted">Email</label>
+                                    <p class="fw-bold">{{ user.email }}</p>
+                                </div>
+                                <div class="col-sm-6 mb-3">
+                                    <label class="form-label text-muted">Phone Number</label>
+                                    <p class="fw-bold">{{ user.phone_number|default:"Not provided" }}</p>
+                                </div>
+                                <div class="col-sm-6 mb-3">
+                                    <label class="form-label text-muted">Date of Birth</label>
+                                    <p class="fw-bold">{{ user.date_of_birth|date:"F j, Y"|default:"Not provided" }}</p>
+                                </div>
+                                <div class="col-sm-6 mb-3">
+                                    <label class="form-label text-muted">Age</label>
+                                    <p class="fw-bold">{{ player.get_age|default:"N/A" }} years</p>
+                                </div>
+                                <div class="col-sm-6 mb-3">
+                                    <label class="form-label text-muted">Join Date</label>
+                                    <p class="fw-bold">{{ player.join_date|date:"F j, Y" }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Player Stats Card -->
+        <div class="col-lg-4">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="bi bi-graph-up me-2"></i>Player Stats
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-6 mb-3">
+                            <div class="border-end">
+                                <h4 class="text-primary mb-1">{{ player.jersey_number|default:"N/A" }}</h4>
+                                <small class="text-muted">Jersey Number</small>
+                            </div>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <h4 class="text-success mb-1">{{ player.position|default:"N/A" }}</h4>
+                            <small class="text-muted">Position</small>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <div class="border-end">
+                                <h4 class="text-info mb-1">{{ player.height|default:"N/A" }}</h4>
+                                <small class="text-muted">Height (cm)</small>
+                            </div>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <h4 class="text-warning mb-1">{{ player.weight|default:"N/A" }}</h4>
+                            <small class="text-muted">Weight (kg)</small>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    
+                    <div class="text-center">
+                        <h6 class="text-muted mb-2">Status</h6>
+                        {% if player.is_active %}
+                            <span class="badge bg-success fs-6">Active Player</span>
+                        {% else %}
+                            <span class="badge bg-danger fs-6">Inactive</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Coach Information -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="bi bi-person-badge me-2"></i>My Coach
+                    </h6>
+                </div>
+                <div class="card-body">
+                    {% if coach %}
+                        <div class="row align-items-center">
+                            <div class="col-md-2 text-center">
+                                {% if coach.user.profile_picture %}
+                                    <img src="{{ coach.user.profile_picture.url }}" 
+                                         class="rounded-circle" 
+                                         width="80" height="80" 
+                                         alt="{{ coach.user.get_full_name }}">
+                                {% else %}
+                                    <div class="bg-secondary rounded-circle mx-auto d-flex align-items-center justify-content-center" 
+                                         style="width: 80px; height: 80px;">
+                                        <i class="bi bi-person text-white" style="font-size: 2rem;"></i>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-10">
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <h5 class="mb-2">{{ coach.user.get_full_name }}</h5>
+                                        <p class="text-muted mb-2">{{ coach.user.email }}</p>
+                                        <p class="mb-2">
+                                            <i class="bi bi-telephone me-2"></i>
+                                            {{ coach.user.phone_number|default:"No phone number" }}
+                                        </p>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="row">
+                                            <div class="col-6">
+                                                <div class="text-center">
+                                                    <h6 class="text-success mb-1">{{ coach.experience_years }}</h6>
+                                                    <small class="text-muted">Years Experience</small>
+                                                </div>
+                                            </div>
+                                            <div class="col-6">
+                                                <div class="text-center">
+                                                    <h6 class="text-info mb-1">{{ coach.get_players_count }}</h6>
+                                                    <small class="text-muted">Players</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="text-end">
+                                            <span class="badge bg-primary mb-2">{{ coach.specialization|default:"General Coach" }}</span>
+                                            <br>
+                                            <small class="text-muted">Hired: {{ coach.hire_date|date:"M j, Y" }}</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                {% if coach.bio %}
+                                <div class="row mt-3">
+                                    <div class="col-12">
+                                        <h6 class="text-muted">Coach Bio</h6>
+                                        <p class="mb-0">{{ coach.bio }}</p>
+                                    </div>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="bi bi-person-badge text-muted" style="font-size: 4rem;"></i>
+                            <h5 class="text-muted mt-3">No Coach Assigned</h5>
+                            <p class="text-muted">You haven't been assigned to a coach yet.</p>
+                            <small class="text-muted">Please contact the administrator for coach assignment.</small>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="bi bi-lightning me-2"></i>Quick Actions
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <a href="{% url 'core:profile' %}" class="btn btn-outline-primary w-100">
+                                <i class="bi bi-person me-2"></i>View Profile
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <a href="{% url 'core:player_list' %}" class="btn btn-outline-info w-100">
+                                <i class="bi bi-people me-2"></i>View Players
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <a href="#" class="btn btn-outline-success w-100">
+                                <i class="bi bi-calendar-check me-2"></i>Training Schedule
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <a href="#" class="btn btn-outline-warning w-100">
+                                <i class="bi bi-graph-up me-2"></i>Performance Stats
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .card {
+        border: none;
+        border-radius: 10px;
+    }
+    
+    .card-header {
+        background-color: #f8f9fc;
+        border-bottom: 1px solid #e3e6f0;
+        border-radius: 10px 10px 0 0 !important;
+    }
+    
+    .border-end {
+        border-right: 1px solid #e3e6f0 !important;
+    }
+    
+    .badge {
+        font-size: 0.75rem;
+    }
+    
+    .fs-6 {
+        font-size: 0.875rem !important;
+    }
+</style>
+{% endblock %} 
